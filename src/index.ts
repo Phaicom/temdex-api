@@ -1,8 +1,10 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import morgan from 'morgan';
+import { DateTime } from 'luxon';
 import { json } from 'body-parser';
 import dotenv from 'dotenv';
-import temtemRouter from './routes/temtem';
+import routes from './routes';
 
 if (process.env.NODE_ENV !== 'production') {
 	dotenv.config();
@@ -10,7 +12,16 @@ if (process.env.NODE_ENV !== 'production') {
 
 const app = express();
 app.use(json());
-app.use(temtemRouter);
+morgan.token('localDate', function getDate() {
+	const date = DateTime.now().setZone('Asia/Bangkok').setLocale('th-TH');
+	return date.toLocaleString();
+});
+morgan.format(
+	'combined',
+	':remote-addr - :remote-user [:localDate]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"',
+);
+app.use(morgan('combined'));
+app.use('/api/v1', routes);
 
 const mongoSrv = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_CLUSTER}/${process.env.MONGODB_DB}?retryWrites=true&w=majority`;
 mongoose.connect(
@@ -25,17 +36,12 @@ mongoose.connect(
 			switch (state) {
 				case 1:
 					return 'connected';
-					break;
 				case 2:
 					return 'connecting';
-					break;
 				case 3:
 					return 'disconnecting';
-					break;
-
 				default:
 					return 'disconnected';
-					break;
 			}
 		};
 		console.log('connect to database: ', readyState(mongoose.connection.readyState));
