@@ -1,8 +1,7 @@
-import express from 'express';
+import express, { json, urlencoded } from 'express';
 import mongoose from 'mongoose';
 import morgan from 'morgan';
 import { DateTime } from 'luxon';
-import { json } from 'body-parser';
 import dotenv from 'dotenv';
 import routes from './routes';
 
@@ -12,6 +11,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 const app = express();
 app.use(json());
+app.use(urlencoded({ extended: true }));
 morgan.token('localDate', function getDate() {
 	const date = DateTime.now().setZone('Asia/Bangkok').setLocale('th-TH');
 	return date.toLocaleString();
